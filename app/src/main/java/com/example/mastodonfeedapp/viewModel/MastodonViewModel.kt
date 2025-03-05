@@ -2,6 +2,7 @@ package com.example.mastodonfeedapp.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mastodonfeedapp.helpers.NetworkMonitor
 import com.example.mastodonfeedapp.repository.MastodonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -16,12 +17,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MastodonViewModel @Inject constructor(
-    private val repository: MastodonRepository
+    private val repository: MastodonRepository,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel(), ContainerHost<MastodonState, MastodonSideEffect> {
-    override val container = container<MastodonState, MastodonSideEffect>(MastodonState())
+    override val container = container<MastodonState, MastodonSideEffect>(MastodonState()) {
+        observeNetworkChanges()
+    }
 
     private var hasStartedStreaming = false
-    private var postLifetime: Int? = null
+    private var postLifetime: Int = 10
     private var cleanupJob: Job? = null
 
     fun setFilterKeyword(keyword: String) = intent {
@@ -35,10 +39,12 @@ class MastodonViewModel @Inject constructor(
 
     fun onLifetimeEntered(lifetimeInSeconds: Int) = intent {
         postLifetime = lifetimeInSeconds
-        startCleanupLoop()
     }
 
     private fun startStreaming() {
+        intent {
+            reduce { state.copy(error = null) }
+        }
         viewModelScope.launch {
             repository.startStreaming()
                 .catch { error ->
@@ -62,8 +68,23 @@ class MastodonViewModel @Inject constructor(
         cleanupJob?.cancel()
         cleanupJob = viewModelScope.launch {
             while (isActive) {
-                delay(TimeUnit.SECONDS.toMillis(5))
-                removeOldMessages() // Continuously remove old posts
+                delay(TimeUnit.SECONDS.toMillis(1))
+                if (networkMonitor.isOnline.value) {
+                    removeOldMessages()
+                }
+            }
+        }
+    }
+
+    private fun observeNetworkChanges() {
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { isOnline ->
+                if (isOnline) {
+                    startCleanupLoop()
+                } else {
+                    hasStartedStreaming = false
+                    cleanupJob?.cancel()
+                }
             }
         }
     }
