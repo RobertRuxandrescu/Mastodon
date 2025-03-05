@@ -1,5 +1,6 @@
 package com.example.mastodonfeedapp.repository
 
+import com.example.mastodonfeedapp.di.MastodonToken
 import com.example.mastodonfeedapp.model.MastodonPost
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -11,16 +12,26 @@ import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 import org.json.JSONObject
+import javax.inject.Inject
 
-class MastodonRepository(private val okHttpClient: OkHttpClient, private val instanceUrl: String) {
+class MastodonRepository @Inject constructor(
+    private val okHttpClient: OkHttpClient,
+    @MastodonToken private val accessToken: String
+) {
 
     fun startStreaming(): Flow<MastodonPost> = callbackFlow {
         val request = Request.Builder()
-            .url("$instanceUrl/api/v1/streaming/public")
+            .url("https://streaming.mastodon.social/api/v1/streaming/public")
+            .header("Authorization", "Bearer $accessToken") // access token is held in gradle.properties(global)
             .build()
 
         val listener = object : EventSourceListener() {
-            override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
+            override fun onEvent(
+                eventSource: EventSource,
+                id: String?,
+                type: String?,
+                data: String
+            ) {
                 if (type == "update") {
                     val jsonObject = JSONObject(data)
                     val newPost = MastodonPost(

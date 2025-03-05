@@ -1,5 +1,6 @@
 package com.example.mastodonfeedapp.di
 
+import com.example.mastodonfeedapp.BuildConfig
 import com.example.mastodonfeedapp.repository.MastodonRepository
 import dagger.Module
 import dagger.Provides
@@ -17,7 +18,8 @@ object MastodonModule {
     }
 
     @Provides
-    fun provideMastodonRepository(client: OkHttpClient): MastodonRepository {
-        return MastodonRepository(client, "https://mastodon.social")
+    @MastodonToken
+    fun provideMastodonAccessToken(): String {
+        return BuildConfig.MASTODON_ACCESS_TOKEN
     }
 }

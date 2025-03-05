@@ -2,8 +2,11 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt)
     kotlin("kapt")
 }
+
+val mastodonAccessToken: String? = project.findProperty("MASTODON_ACCESS_TOKEN") as String?
 
 android {
     namespace = "com.example.mastodonfeedapp"
@@ -17,6 +20,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "MASTODON_ACCESS_TOKEN",
+            "\"${mastodonAccessToken ?: ""}\""
+        )
     }
 
     buildTypes {
@@ -37,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
