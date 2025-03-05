@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
             val viewModel: MastodonViewModel = hiltViewModel()
             val state by viewModel.container.stateFlow.collectAsState()
 
-            MastodonApp(state, viewModel::setFilterKeyword, viewModel::startStreaming)
+            MastodonApp(state, viewModel::setFilterKeyword)
         }
     }
 }
@@ -35,8 +35,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MastodonApp(
     state: MastodonState,
-    onKeywordChange: (String) -> Unit,
-    onStartStreaming: () -> Unit
+    onKeywordEntered: (String) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -45,8 +44,7 @@ fun MastodonApp(
     ) { innerPadding ->
         MastodonScreen(
             state = state,
-            onKeywordChange = onKeywordChange,
-            onStartStreaming = onStartStreaming,
+            onKeywordEntered = onKeywordEntered,
             modifier = Modifier.padding(innerPadding)
         )
     }

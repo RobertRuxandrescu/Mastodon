@@ -16,7 +16,18 @@ class MastodonViewModel @Inject constructor(
 ) : ViewModel(), ContainerHost<MastodonState, MastodonSideEffect> {
     override val container = container<MastodonState, MastodonSideEffect>(MastodonState())
 
-    fun startStreaming() {
+    private var hasStartedStreaming = false
+
+    fun setFilterKeyword(keyword: String) = intent {
+        reduce { state.copy(filterKeyword = keyword) }
+
+        if (!hasStartedStreaming && keyword.isNotEmpty()) {
+            hasStartedStreaming = true
+            startStreaming()
+        }
+    }
+
+    private fun startStreaming() {
         viewModelScope.launch {
             repository.startStreaming()
                 .catch { error ->
@@ -34,9 +45,5 @@ class MastodonViewModel @Inject constructor(
                     }
                 }
         }
-    }
-
-    fun setFilterKeyword(keyword: String) = intent {
-        reduce { state.copy(filterKeyword = keyword) }
     }
 }
