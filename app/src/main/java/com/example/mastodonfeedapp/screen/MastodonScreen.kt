@@ -22,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -40,28 +42,12 @@ import com.example.mastodonfeedapp.viewModel.MastodonState
 fun MastodonScreen(
     state: MastodonState,
     onKeywordEntered: (String) -> Unit,
+    onLifetimeEntered: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var tempKeyword by remember { mutableStateOf("") }
-    val keyboardController = LocalSoftwareKeyboardController.current
-
     Column(modifier = modifier.padding(16.dp)) {
-        OutlinedTextField(
-            value = tempKeyword,
-            onValueChange = { tempKeyword = it },
-            label = { Text("Filter posts") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done // ✅ Changes "Return" key to "Done"
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    onKeywordEntered(tempKeyword) // ✅ Update filter only when "Done" is pressed
-                    keyboardController?.hide() // ✅ Hide keyboard
-                }
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
+        MastodonFilterField(onKeywordEntered)
+        MastodonSecondsField(onLifetimeEntered)
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -102,14 +88,65 @@ fun MastodonPostItem(post: MastodonPost) {
     }
 }
 
+@Composable
+fun MastodonFilterField(
+    onKeywordEntered: (String) -> Unit,
+) {
+    var tempKeyword by remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    OutlinedTextField(
+        value = tempKeyword,
+        onValueChange = { tempKeyword = it },
+        label = { Text("Filter posts") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Done // ✅ Changes "Return" key to "Done"
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                onKeywordEntered(tempKeyword) // ✅ Update filter only when "Done" is pressed
+                keyboardController?.hide() // ✅ Hide keyboard
+            }
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+fun MastodonSecondsField(
+    onLifetimeEntered: (Int) -> Unit
+) {
+    var tempSeconds by remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    OutlinedTextField(
+        value = tempSeconds,
+        onValueChange = { tempSeconds = it.filter { char -> char.isDigit() } }, // Only allow numbers
+        label = { Text("Remove messages older than (seconds)") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions.Default.copy(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                tempSeconds.toIntOrNull()?.let { onLifetimeEntered(it) } // Input to number
+                keyboardController?.hide()
+            }
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewMastodonScreen() {
     val fakeState = MastodonState(
         posts = listOf(
-            MastodonPost(id = "1", content = "Message 1"),
-            MastodonPost(id = "2", content = "Message 2"),
-            MastodonPost(id = "3", content = "Message 3")
+            MastodonPost(id = "1", content = "Message 1", ""),
+            MastodonPost(id = "2", content = "Message 2", ""),
+            MastodonPost(id = "3", content = "Message 3", "")
         ),
         isLoading = false
     )
@@ -119,6 +156,7 @@ fun PreviewMastodonScreen() {
             MastodonScreen(
                 state = fakeState,
                 onKeywordEntered = {},
+                onLifetimeEntered = {}
             )
         }
     }

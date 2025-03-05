@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
             val viewModel: MastodonViewModel = hiltViewModel()
             val state by viewModel.container.stateFlow.collectAsState()
 
-            MastodonApp(state, viewModel::setFilterKeyword)
+            MastodonApp(state, viewModel::setFilterKeyword, viewModel::onLifetimeEntered)
         }
     }
 }
@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
 fun MastodonApp(
     state: MastodonState,
     onKeywordEntered: (String) -> Unit,
+    onLifetimeEntered: (Int) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -45,6 +46,7 @@ fun MastodonApp(
         MastodonScreen(
             state = state,
             onKeywordEntered = onKeywordEntered,
+            onLifetimeEntered = onLifetimeEntered,
             modifier = Modifier.padding(innerPadding)
         )
     }

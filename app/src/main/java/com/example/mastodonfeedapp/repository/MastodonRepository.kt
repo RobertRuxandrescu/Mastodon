@@ -36,7 +36,8 @@ class MastodonRepository @Inject constructor(
                     val jsonObject = JSONObject(data)
                     val newPost = MastodonPost(
                         id = jsonObject.getString("id"),
-                        content = jsonObject.getString("content")
+                        content = jsonObject.getString("content"),
+                        createdAt = jsonObject.getString("created_at"),
                     )
                     trySend(newPost)
                 }
