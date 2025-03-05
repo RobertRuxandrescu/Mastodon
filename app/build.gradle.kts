@@ -60,8 +60,8 @@ dependencies {
     implementation(libs.orbit.core)
     implementation(libs.orbit.viewmodel)
     implementation(libs.orbit.compose)
-    implementation(libs.orbit.compose)
-    implementation(libs.orbit.compose)
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
+    implementation(libs.viewmodel.compose)
+    implementation(libs.hilt.navigation.compose)
 }
