@@ -12,6 +12,7 @@ composeBom = "2024.04.01"
 hilt = "2.40.5"
 viewModel = "2.4.1"
 hilt-navigation-compose = "1.0.0"
+okHttp = "4.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +36,8 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "viewModel" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
+okhttp-core = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okHttp" }
+okhttp-sse = { group = "com.squareup.okhttp3", name = "okhttp-sse", version.ref = "okHttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

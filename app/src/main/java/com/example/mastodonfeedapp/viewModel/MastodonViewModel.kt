@@ -1,20 +1,42 @@
 package com.example.mastodonfeedapp.viewModel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mastodonfeedapp.repository.MastodonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.viewmodel.container
+import javax.inject.Inject
 
 @HiltViewModel
-class MastodonViewModel(private val repository: MastodonRepository) : ViewModel(), ContainerHost<MastodonState, MastodonSideEffect> {
+class MastodonViewModel @Inject constructor(
+    private val repository: MastodonRepository
+) : ViewModel(), ContainerHost<MastodonState, MastodonSideEffect> {
     override val container = container<MastodonState, MastodonSideEffect>(MastodonState())
 
     fun startStreaming() {
-        // TODO Future call to the repository to fetch the data
+        viewModelScope.launch {
+            repository.startStreaming()
+                .catch { error ->
+                    intent {
+                        reduce { state.copy(error = error.message) }
+                        postSideEffect(MastodonSideEffect.ShowError(error.message ?: "Error while getting the data"))
+                    }
+                }
+                .collect { newPost ->
+                    intent {
+                        val keyword = state.filterKeyword.lowercase()
+                        if (keyword.isEmpty() || newPost.content.lowercase().contains(keyword)) {
+                            reduce { state.copy(posts = state.posts + newPost) }
+                        }
+                    }
+                }
+        }
     }
 
-    fun setFilterKeyword() {
-        // TODO Use this method to filter the feed by user's input
+    fun setFilterKeyword(keyword: String) = intent {
+        reduce { state.copy(filterKeyword = keyword) }
     }
 }

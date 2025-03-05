@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.mastodonfeedapp.screen.MastodonScreen
 import com.example.mastodonfeedapp.ui.theme.MastodonFeedAppTheme
 import com.example.mastodonfeedapp.viewModel.MastodonViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,8 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MastodonFeedAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val viewModel = hiltViewModel<MastodonViewModel>()
-                    MastodonListScreen()
+                    MastodonScreen()
                 }
             }
         }

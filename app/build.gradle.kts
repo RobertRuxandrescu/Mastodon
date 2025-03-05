@@ -64,4 +64,6 @@ dependencies {
     kapt(libs.hilt.android.compiler)
     implementation(libs.viewmodel.compose)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.sse)
 }
