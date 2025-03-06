@@ -1,15 +1,19 @@
 package com.example.mastodonfeedapp.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mastodonfeedapp.helpers.NetworkMonitor
 import com.example.mastodonfeedapp.repository.MastodonRepository
+import com.example.mastodonfeedapp.repository.MastodonRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.viewmodel.container
 import java.util.concurrent.TimeUnit
@@ -25,9 +29,10 @@ class MastodonViewModel @Inject constructor(
     }
 
     private var hasStartedStreaming = false
-    private var postLifetime: Int = 10
+    private var postLifetime: Long = 10
     private var cleanupJob: Job? = null
 
+    //region PUBLIC FUNCTIONS
     fun setFilterKeyword(keyword: String) = intent {
         reduce { state.copy(filterKeyword = keyword) }
 
@@ -37,30 +42,30 @@ class MastodonViewModel @Inject constructor(
         }
     }
 
-    fun onLifetimeEntered(lifetimeInSeconds: Int) = intent {
+    fun onLifetimeEntered(lifetimeInSeconds: Long) = intent {
         postLifetime = lifetimeInSeconds
+        startCleanupLoop()
     }
+    //endregion
 
+    //region PRIVATE FUNCTIONS
     private fun startStreaming() {
         intent {
             reduce { state.copy(error = null) }
         }
-        viewModelScope.launch {
-            repository.startStreaming()
-                .catch { error ->
-                    intent {
+        intent {
+            withContext(Dispatchers.IO) {
+                repository.startStreaming()
+                    .catch { error ->
                         reduce { state.copy(error = error.message) }
-                        postSideEffect(MastodonSideEffect.ShowError(error.message ?: "Error while getting the data"))
                     }
-                }
-                .collect { newPost ->
-                    intent {
+                    .collect { newPost ->
                         val keyword = state.filterKeyword.lowercase()
-                        if (keyword.isEmpty() || newPost.content.lowercase().contains(keyword)) {
+                        if (newPost.content.lowercase().contains(keyword)) {
                             reduce { state.copy(posts = state.posts + newPost) }
                         }
                     }
-                }
+            }
         }
     }
 
@@ -68,16 +73,16 @@ class MastodonViewModel @Inject constructor(
         cleanupJob?.cancel()
         cleanupJob = viewModelScope.launch {
             while (isActive) {
-                delay(TimeUnit.SECONDS.toMillis(1))
                 if (networkMonitor.isOnline.value) {
                     removeOldMessages()
                 }
+                delay(TimeUnit.SECONDS.toMillis(postLifetime))
             }
         }
     }
 
     private fun observeNetworkChanges() {
-        viewModelScope.launch {
+        intent {
             networkMonitor.isOnline.collect { isOnline ->
                 if (isOnline) {
                     startCleanupLoop()
@@ -90,12 +95,20 @@ class MastodonViewModel @Inject constructor(
     }
 
     private fun removeOldMessages() = intent {
-        val currentTime = System.currentTimeMillis() / 1000 // Get current time in seconds
+        val currentTime = System.currentTimeMillis() / 1000
         val filteredPosts = state.posts.filter { post ->
-            postLifetime.let { currentTime - post.getTimestamp() < it }
+            val postAge = currentTime - post.createdAt
+            Log.d(
+                "MastodonViewModel",
+                "Post ID: ${post.id}, Age: $postAge, Lifetime: $postLifetime, Is Old: ${postAge >= postLifetime}"
+            )
+
+            postAge < postLifetime
         }
+
         reduce { state.copy(posts = filteredPosts) }
     }
+    //endregion
 
     override fun onCleared() {
         cleanupJob?.cancel() // Cancel job when ViewModel is destroyed

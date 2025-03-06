@@ -76,4 +76,13 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.sse)
+
+    // Testing dependencies
+    implementation(libs.mockito.core)
+    implementation(libs.mockito.kotlin)
+    implementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.json.testing)
+    testImplementation(libs.mockk)
+    testImplementation(libs.orbit.testing)
+
 }

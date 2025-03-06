@@ -12,7 +12,7 @@ class NetworkMonitor(context: Context) {
 
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val _isOnline = MutableStateFlow(checkInternet())
-    val isOnline = _isOnline.asStateFlow() // ✅ Expose as StateFlow
+    val isOnline = _isOnline.asStateFlow() // Expose as StateFlow
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {

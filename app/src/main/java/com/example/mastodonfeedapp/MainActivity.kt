@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
 fun MastodonApp(
     state: MastodonState,
     onKeywordEntered: (String) -> Unit,
-    onLifetimeEntered: (Int) -> Unit,
+    onLifetimeEntered: (Long) -> Unit,
 ) {
     Scaffold(
         topBar = {

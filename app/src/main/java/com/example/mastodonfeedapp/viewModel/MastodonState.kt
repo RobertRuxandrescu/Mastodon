@@ -4,7 +4,6 @@ import com.example.mastodonfeedapp.model.MastodonPost
 
 data class MastodonState(
     val posts: List<MastodonPost> = emptyList(),
-    val isLoading: Boolean = false,
     val error: String? = null,
     val filterKeyword: String = ""
 )

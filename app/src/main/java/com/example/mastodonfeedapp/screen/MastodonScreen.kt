@@ -15,18 +15,15 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -42,7 +39,7 @@ import com.example.mastodonfeedapp.viewModel.MastodonState
 fun MastodonScreen(
     state: MastodonState,
     onKeywordEntered: (String) -> Unit,
-    onLifetimeEntered: (Int) -> Unit,
+    onLifetimeEntered: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(16.dp)) {
@@ -51,16 +48,12 @@ fun MastodonScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (state.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-        }
-
         if (state.error != null) {
             Text(text = "Error: ${state.error}", color = Color.Red)
         }
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(state.posts) { post ->
+            items(state.posts, key = { post -> post.id }) { post ->
                 MastodonPostItem(post)
             }
         }
@@ -84,6 +77,7 @@ fun MastodonPostItem(post: MastodonPost) {
                     }
                 }
             )
+            Text(text = "Created at ${post.convertTimestampToDate(post.createdAt)}", color = Color.DarkGray)
         }
     }
 }
@@ -101,12 +95,12 @@ fun MastodonFilterField(
         label = { Text("Filter posts") },
         singleLine = true,
         keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Done // ✅ Changes "Return" key to "Done"
+            imeAction = ImeAction.Done // Changes "Return" key to "Done"
         ),
         keyboardActions = KeyboardActions(
             onDone = {
-                onKeywordEntered(tempKeyword) // ✅ Update filter only when "Done" is pressed
-                keyboardController?.hide() // ✅ Hide keyboard
+                onKeywordEntered(tempKeyword) // Update filter only when "Done" is pressed
+                keyboardController?.hide() // Hide keyboard
             }
         ),
         modifier = Modifier.fillMaxWidth()
@@ -115,7 +109,7 @@ fun MastodonFilterField(
 
 @Composable
 fun MastodonSecondsField(
-    onLifetimeEntered: (Int) -> Unit
+    onLifetimeEntered: (Long) -> Unit
 ) {
     var tempSeconds by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -131,7 +125,7 @@ fun MastodonSecondsField(
         ),
         keyboardActions = KeyboardActions(
             onDone = {
-                tempSeconds.toIntOrNull()?.let { onLifetimeEntered(it) } // Input to number
+                tempSeconds.toIntOrNull()?.let { onLifetimeEntered(it.toLong()) } // Input to number
                 keyboardController?.hide()
             }
         ),
@@ -144,11 +138,10 @@ fun MastodonSecondsField(
 fun PreviewMastodonScreen() {
     val fakeState = MastodonState(
         posts = listOf(
-            MastodonPost(id = "1", content = "Message 1", ""),
-            MastodonPost(id = "2", content = "Message 2", ""),
-            MastodonPost(id = "3", content = "Message 3", "")
+            MastodonPost(id = "1", content = "Message 1"),
+            MastodonPost(id = "2", content = "Message 2"),
+            MastodonPost(id = "3", content = "Message 3")
         ),
-        isLoading = false
     )
 
     MaterialTheme {
