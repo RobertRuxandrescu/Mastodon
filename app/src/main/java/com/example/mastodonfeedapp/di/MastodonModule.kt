@@ -1,7 +1,6 @@
 package com.example.mastodonfeedapp.di
 
 import com.example.mastodonfeedapp.BuildConfig
-import com.example.mastodonfeedapp.repository.MastodonRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,4 +21,5 @@ object MastodonModule {
     fun provideMastodonAccessToken(): String {
         return BuildConfig.MASTODON_ACCESS_TOKEN
     }
+
 }

@@ -92,7 +92,7 @@ class MastodonViewModel @Inject constructor(
     private fun removeOldMessages() = intent {
         val currentTime = System.currentTimeMillis() / 1000 // Get current time in seconds
         val filteredPosts = state.posts.filter { post ->
-            postLifetime?.let { currentTime - post.getTimestamp() < it } ?: true
+            postLifetime.let { currentTime - post.getTimestamp() < it }
         }
         reduce { state.copy(posts = filteredPosts) }
     }
